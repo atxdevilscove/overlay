@@ -132,6 +132,7 @@
         let currentlyDisplaying = [];
         let usedPositions = [];
         let nextCheckTime = Date.now() + CONFIG.checkIntervalMs;
+        let currentPhotoIndex = 0; // Track position in photo array
 
         // Available positions for photos
         const positions = ['position-1', 'position-2'];
@@ -220,9 +221,10 @@
         }
 
         function processQueue() {
-            // Check if we can display more photos
-            while (currentlyDisplaying.length < CONFIG.maxConcurrentImages && photoQueue.length > 0) {
-                const nextPhoto = photoQueue.shift();
+            // Always cycle through photos continuously
+            if (currentlyDisplaying.length < CONFIG.maxConcurrentImages) {
+                const nextPhoto = mockPhotos[currentPhotoIndex];
+                currentPhotoIndex = (currentPhotoIndex + 1) % mockPhotos.length; // Loop back to start
                 displayPhoto(nextPhoto);
             }
 
@@ -230,7 +232,8 @@
         }
 
         function updateDebugInfo() {
-            document.getElementById('queueCount').textContent = photoQueue.length;
+            const remainingInCycle = mockPhotos.length - currentPhotoIndex;
+            document.getElementById('queueCount').textContent = `${remainingInCycle} (cycling)`;
             document.getElementById('displayingCount').textContent = currentlyDisplaying.length;
             
             const timeToNext = Math.max(0, Math.ceil((nextCheckTime - Date.now()) / 1000));
@@ -256,14 +259,12 @@
         // Start the system when page loads
         window.addEventListener('load', startOverlaySystem);
 
-        // Reset queue for demo purposes (optional - remove for production)
-        function resetDemo() {
-            photoQueue = [...mockPhotos];
-            console.log('Demo reset - queue refilled');
+        // Optional: Log when we complete a full cycle
+        function logCycleCompletion() {
+            if (currentPhotoIndex === 0) {
+                console.log('Completed full photo cycle, starting over...');
+            }
         }
-
-        // Auto-reset demo every 2 minutes for testing
-        setInterval(resetDemo, 120000);
     </script>
 </body>
 </html>
